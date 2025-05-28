@@ -4,7 +4,7 @@
 #include <values.h>
 #include <iostream.h>
 
-/**********    Constants    **********/
+/// MARK: CONSTANTS
 
 #define true 1
 #define false 0
@@ -14,7 +14,7 @@
 #define MaxStack 512
 enum taskStatus { READY, NOT_ACTIVE, SUSPENDED, SLEEP, UNDEFINED };
 
-/**********    Classes    **********/
+/// MARK: Classes
 
 class Event {
 private:
@@ -50,12 +50,10 @@ public:
   Event *expectedEvent;        // the event that this task is waiting for
   int sleepCount;              // the sleep remainder time
   Task();
-  // void declare(void far *code, void far *taskEnd, char name);
   void sleepDecr();
   void incrPriority();
   void setOriginalPriority();
 
-  /// MARK: addition for the class assignment
   int deadline;         // the deadline
   int originalDeadline; // the original deadline time
   int cycles;           // the execution time
@@ -76,7 +74,7 @@ public:
   void redeclare();
 };
 
-//                           Main class
+/// MARK: Main class
 
 class Parallelism {
 private:
@@ -86,12 +84,11 @@ private:
   int totalTasks;               // total declared tasks
   int currentTask;              // time slice holding task
   int deadlock;                 // deadlock flag
-  /// MARK: addition for the class assignment
   int error;             // error flag
   int progInt;           // 'program interrupt' flag
   int contextSwitchFlag; // enables/disables context switch
   int endOfTimeSlice;    // indicates that has to be a context switch as soon as
-                      // possible a pointer to the new timer interrupt handler
+  // possible a pointer to the new timer interrupt handler
   void interrupt (*timerInterruptHandler)(...);
   // a pointer to the original BIOS timer interrupt handler
   void interrupt (*userIntAddress)(...);
@@ -110,13 +107,12 @@ public:
   Parallelism();
   // sets the addresses of the external functions
   void externalFunctions(void interrupt (*timerInterruptHandler)(...),
-                         void far *scheduler, void far *userTaskEnd,
-                         int far (*algorithm)());
-  // int declareTask(void far *code, char name); // inserts a new task entry
-  /// MARK: addition for the class assignment
+    void far *scheduler, void far *userTaskEnd,
+    int far (*algorithm)());
   int declareTask(void far *code, char name, int deadline = 0,
-                  int cycles = 0);      // inserts a new task entry with its
-                                    // execution time and deadline time
+    int cycles = 0);      // inserts a new task entry with its
+
+// execution time and deadline time
   void runTheTasks();               // start running the tasks
   void callScheduler();             // return to the control to the scheduler
   void restoreSchedStack();         // restore the 'scheduler' stack
@@ -154,7 +150,6 @@ public:
   void handleTimers();
   void taskEnd();
 
-  /// MARK: addition for the class assignment
   void updateDeadline(int taskNum) {
     context[taskNum].updateDeadline();
   } // update the deadline of the task
@@ -177,16 +172,25 @@ public:
   void setError() { this->error = true; } // set the error flag
   int getError() { return error; }        // get the error flag
 };
-//=======================
-/**********    Functions    **********/
+
+
+/// MARK: External functions
+
 // reads the number of the remaining clocks from the timer register
 extern unsigned getTimerClocks();
+
 // external functions for 'externalFunctions' function
 void far interrupt timerInterruptHandler(...);
+
 void scheduler();
+
 void myTaskEnd();
+
 // 'short term' scheduler algorithms
 int roundRobin();
+
+// earlier deadline first
 int edf();
+
 // main scheduler object
 extern Parallelism SMARTS;

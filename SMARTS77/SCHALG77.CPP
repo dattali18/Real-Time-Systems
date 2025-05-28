@@ -16,14 +16,16 @@ int roundRobin() {
 // EDF - Earliest Deadline First short-term algorithm
 int edf() {
   int nextTask = -1; // no task to run
-  int minDeadline = MAXINT;              // maximum deadline
+  int minDeadline = MAXINT; // maximum deadline
 
   for (int i = 0; i < SMARTS.getTotalTasks(); i++) {
-    if (SMARTS.getStatus(i) == READY && SMARTS.getCycles(i) > 0) {
-      int temp = SMARTS.getDeadline(i);
-      if (temp < minDeadline) {
-        minDeadline = temp;
-        nextTask = i;
+    if (SMARTS.getStatus(i) == READY) {
+      if(SMARTS.getCycles(i) > 0) {
+        int temp = SMARTS.getDeadline(i);
+        if (temp < minDeadline) {
+          minDeadline = temp;
+          nextTask = i;
+        }
       }
     }
   }

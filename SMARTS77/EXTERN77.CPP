@@ -36,12 +36,6 @@ void far interrupt timerInterruptHandler(...) {
     asm mov ss, ax;
     asm mov sp, StackPtrAct;
   }
-  // else if 'context switch' flag=false set 'end of time slice' flag
-  //	else
-  //	{
-  //		SMARTS.setEndOfTimeSlice();
-  //		++SMARTS.TScount;	// increment Time Share count
-  //	}
 }
 
 void scheduler() {

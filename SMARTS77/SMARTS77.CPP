@@ -37,27 +37,15 @@ void Parallelism::externalFunctions(
   this->userTaskEnd = userTaskEnd;
   this->algorithm = algorithm;
 
-  contextSched.declare(scheduler, userTaskEnd,
-                       'S'); // prepare the stack of the scheduler task
+  contextSched.declare(scheduler, userTaskEnd, 'S');
+  // prepare the stack of the scheduler task
 
   for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
     schedCopy[i] = contextSched.stack[i];
 }
-/*
-int Parallelism::declareTask(void far *code, char name) {
-  // Insert a new task entry in SMARTS context array [ ]
-
-  if (totalTasks < MaxTask - 1) {
-    context[totalTasks++].declare(code, userTaskEnd, name);
-    ++activeTasks;
-    return true;
-  } else
-    return false;
-}
-*/
 
 int Parallelism::declareTask(void far *code, char name, int deadline,
-                             int cycles) {
+  int cycles) {
   // Insert a new task entry in SMARTS context array [ ] with its execution time
   // and deadline time
 
@@ -73,27 +61,27 @@ void Parallelism::updateDeadlines() {
   for (int i = 0; i < totalTasks - 1; ++i) {
     context[i].updateDeadline();
 
-    if(context[i].deadline == 0 && context[i].cycles > 0) {
-      context[i].redeclare();
-    }
+    if(context[i].deadline == 0) 
+      if(context[i].cycles > 0)
+        context[i].redeclare();
   }
 } // update the deadlines of all tasks
 
 void Parallelism::runTheTasks() {
   // Start running all tasks declared in SMARTS.
-
   context[totalTasks].status = READY; // for task 'runTheTasks' (IDLE task)
   context[totalTasks].priority = MAXINT;
   context[totalTasks].currentPriority = MAXINT;
 
   currentTask = totalTasks;
 
-  asm cli; // forbids interrupts (clear interrupts) while changing the interrupt
-           // vect saves the original BIOS userInt in our variable
-           // 'userIntAddress' to be restored at the end
-  userIntAddress = getvect(
-      userInt); // BIOS userInt 0x60  (unused by PC)
-                // puts the normal BIOS timerInt into the unused userInt address
+  asm cli; 
+  // forbids interrupts (clear interrupts) while changing the interrupt
+  // vect saves the original BIOS userInt in our variable
+  // 'userIntAddress' to be restored at the end
+  userIntAddress = getvect(userInt); 
+  // BIOS userInt 0x60  (unused by PC)
+  // puts the normal BIOS timerInt into the unused userInt address
   setvect(userInt, getvect(timerInt)); // timerInt 0x08
 
   // sets our SMARTS external function 'timerInterruptHandler' as the new PC
@@ -108,11 +96,13 @@ void Parallelism::runTheTasks() {
       cprintf("\n\n\rExit : error");
       break;
     }
+
     if (deadlock) {
       textcolor(RED);
       cprintf("\n\n\rExit : deadlock");
       break;
     }
+
     if (activeTasks == 0) {
       cprintf("\n\n\rExit : finish");
       break;
@@ -144,7 +134,6 @@ int Parallelism::getCurrentTask() { return currentTask; }
 
 void Parallelism::setCurrentTask(int taskNum) {
   // Sets the next task to be run
-
   if (taskNum <= totalTasks)
     currentTask = taskNum;
 }
@@ -160,12 +149,12 @@ void Parallelism::setDeadlock() { deadlock = true; }
 
 int Parallelism::contextSwitchOn() {
   // flag which enables context switch
-
-  if (endOfTimeSlice) // is current time slice finished ?
-  {
+    // is current time slice finished ?
+  if (endOfTimeSlice) {
     endOfTimeSlice = false;
     contextSwitchFlag = true;
-    callScheduler(); // return control to the scheduler
+    callScheduler();
+    // return control to the scheduler
     return 1;
   }
   contextSwitchFlag = true;
@@ -249,7 +238,6 @@ void Parallelism::setCurrentOriginalPriority() {
 
 Event *Parallelism::getExpectedEvent(int taskNum) {
   // returns *Event  or  NULL  if not found
-
   return (taskNum <= totalTasks) ? context[taskNum].expectedEvent : NULL;
 }
 
@@ -263,7 +251,6 @@ void Parallelism::setCurrentExpectedEvent(Event *expectedEvent) {
 
 void Parallelism::sleep(int t) {
   // Current task sleeps for 't' milliseconds
-
   if (t < MAXINT) {
     context[currentTask].sleepCount = t / 55 + 1;
     context[currentTask].status = SLEEP;
@@ -295,14 +282,12 @@ void Parallelism::getCurrentStack(unsigned &StackSeg, unsigned &StackPtr) {
 
 void Parallelism::setCurrentStack(unsigned StackSeg, unsigned StackPtr) {
   // Save current task stack pointer
-
   context[currentTask].stackSeg = StackSeg;
   context[currentTask].stackPtr = StackPtr;
 }
 
 void Parallelism::getSchedStack(unsigned &StackSeg, unsigned &StackPtr) {
   // Load scheduler  stack pointer
-
   StackSeg = contextSched.stackSeg;
   StackPtr = contextSched.stackPtr;
 }
@@ -310,7 +295,6 @@ void Parallelism::getSchedStack(unsigned &StackSeg, unsigned &StackPtr) {
 void Parallelism::handleTimers() {
   // handling of the sleep status mode
   /// MARK: update deadline
-
   this->updateDeadlines(); // update the deadlines of all tasks
 
   for (int i = totalTasks - 1; i >= 0; --i) {
@@ -348,31 +332,10 @@ Task::Task() {
   currentPriority = priority = 0;
 }
 
-/**
-void Task::declare(void far *code, void far *userTaskEnd, char name) {
-  stack[MaxStack - 5] = FP_OFF(code);
-  stack[MaxStack - 4] = FP_SEG(code);
-  stack[MaxStack - 3] = _FLAGS;
-  stack[MaxStack - 2] = FP_OFF(userTaskEnd);
-  stack[MaxStack - 1] = FP_SEG(userTaskEnd);
-
-  // copy the stack to the stackCopy array
-  for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
-    stackCopy[i] = stack[i];
-
-  this->name = name;
-  this->executionTime = 1;
-  this->deadlineTime = 1;
-  this->originalDeadlineTime = 1;
-  this->timeRemaining = 1;
-  status = READY;
-}*/
-
 /// MARK: addition for the class assignment
 void Task::declare(void far *code, void far *taskEnd, char name, int deadline,
-                   int cycles) {
+    int cycles) {
   // Declare a task with its execution time and deadline time
-
   stack[MaxStack - 5] = FP_OFF(code);
   stack[MaxStack - 4] = FP_SEG(code);
   stack[MaxStack - 3] = _FLAGS;
@@ -389,7 +352,7 @@ void Task::declare(void far *code, void far *taskEnd, char name, int deadline,
   is_restore = false;
 
   this->name = name;
-  this->cycles = cycles; // set the execution time
+  this->cycles = cycles;
   this->deadline = deadline;
   this->originalDeadline = deadline;
 
@@ -397,21 +360,24 @@ void Task::declare(void far *code, void far *taskEnd, char name, int deadline,
 }
 
 /// MARK: addition for the class assignment
+
 void Task::redeclare() {
   deadline = originalDeadline;
   cycles--;
 
-  if (status == NOT_ACTIVE) {
-    if (cycles > 0) {
-      is_restore = true;
-      status = READY;
-    } else {
-      status = NOT_ACTIVE;
+// if the task did not finished its execution passed the deadline
+// we set the system error
+    if(status == READY) {
+        SMARTS.setError();
+        status = UNDEFINED;
     }
-  } else {
-    SMARTS.setError();
-    status = UNDEFINED;
-  }
+
+    if (status == NOT_ACTIVE) {
+        if (cycles > 0) {
+            is_restore = true;
+            status = READY;
+        }
+    }
 }
 
 void Task::incrPriority() { --currentPriority; }
