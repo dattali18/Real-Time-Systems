@@ -4,7 +4,6 @@
 
 unsigned getTimerClocks() {
   // Gets the remaining clocks of the timer register
-
   unsigned clocks;
   /* latch counter #0 */
   outportb(0x43, 0x00);
@@ -28,8 +27,8 @@ Parallelism::Parallelism() {
 }
 
 void Parallelism::externalFunctions(
-    void interrupt (*timerInterruptHandler)(...), void far *scheduler,
-    void far *userTaskEnd, int far (*algorithm)()) {
+  void interrupt (*timerInterruptHandler)(...), void far *scheduler,
+  void far *userTaskEnd, int far (*algorithm)()) {
   // Sets the external functions
 
   this->timerInterruptHandler = timerInterruptHandler;
@@ -149,7 +148,7 @@ void Parallelism::setDeadlock() { deadlock = true; }
 
 int Parallelism::contextSwitchOn() {
   // flag which enables context switch
-    // is current time slice finished ?
+  // is current time slice finished ?
   if (endOfTimeSlice) {
     endOfTimeSlice = false;
     contextSwitchFlag = true;
@@ -194,7 +193,6 @@ char Parallelism::getCurrentName() { return context[currentTask].name; }
 
 taskStatus Parallelism::getStatus(int taskNum) {
   // returns status or undefined if not found
-
   return (taskNum <= totalTasks) ? context[taskNum].status : UNDEFINED;
 }
 
@@ -215,9 +213,11 @@ void Parallelism::resume(char taskName) {
 
 void Parallelism::setCurrentNotActive() {
   context[currentTask].status = NOT_ACTIVE;
-  if(context[currentTask].cycles <= 1)
+
+  if (context[currentTask].cycles <= 1)
     --activeTasks;
 }
+
 void Parallelism::suspended() {
   context[currentTask].status = SUSPENDED;
   callScheduler();
@@ -367,17 +367,17 @@ void Task::redeclare() {
 
 // if the task did not finished its execution passed the deadline
 // we set the system error
-    if(status == READY) {
-        SMARTS.setError();
-        status = UNDEFINED;
-    }
+  if(status == READY) {
+      SMARTS.setError();
+      status = UNDEFINED;
+  }
 
-    if (status == NOT_ACTIVE) {
-        if (cycles > 0) {
-            is_restore = true;
-            status = READY;
-        }
-    }
+  if (status == NOT_ACTIVE) {
+      if (cycles > 0) {
+          is_restore = true;
+          status = READY;
+      }
+  }
 }
 
 void Task::incrPriority() { --currentPriority; }
@@ -386,7 +386,6 @@ void Task::setOriginalPriority() { currentPriority = priority; }
 
 void Task::sleepDecr() {
   // Decrements the sleep counter and update the task status accordingly
-
   if (status == SLEEP) {
     if (sleepCount > 0)
       --sleepCount;

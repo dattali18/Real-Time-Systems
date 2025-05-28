@@ -26,8 +26,7 @@ private:
   int testAndSet(); // test and set 'flag' in an 'atomic transaction'
 public:
   Event();
-  // sends an event to 'dest', if 'synch' is true waits until the receiver gets
-  // it.
+  // sends an event to 'dest', if 'synch' is true waits until the receiver gets it.
   void send(char dest, void *param, int synch);
   // waits for the event, and returns the parameter.
   void *wait(char &sourceP); //'sourceP' will contain the task sender ID.
@@ -63,7 +62,7 @@ public:
   unsigned stackSegCopy, stackPtrCopy; // a copy of the stack pointer
 
   int getDeadline() { return deadline; }
-  void updateDeadline() { deadline--; }
+  void updateDeadline() { --deadline; }
 
   int getCycles() { return cycles; } // get the execution time
   void setCycles(int c) { cycles = c; } // set the execution time

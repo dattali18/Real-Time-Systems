@@ -65,22 +65,12 @@ void main() {
 
   switch (run) {
   case RR:
-    /// RR & Not EDF
-    /// N = 20
-    /// M = 200000
-
-    /// RR & EDF
-    /// N = 10
-    /// M = 10000
-    SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd,
-                             roundRobin);
-    SMARTS.declareTask(a, 'A');
-    SMARTS.declareTask(b, 'B');
-    SMARTS.declareTask(c, 'C');
+    SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, roundRobin);
+    SMARTS.declareTask(a, 'A', 1000, 1);
+    SMARTS.declareTask(b, 'B', 1000, 1);
+    SMARTS.declareTask(c, 'C', 1000, 1);
     break;
   case EDF:
-    /// N = 10
-    /// M = 10000
     SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, edf);
     SMARTS.declareTask(a, 'A', 10, 3);
     SMARTS.declareTask(b, 'B', 50, 2);
