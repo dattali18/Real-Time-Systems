@@ -1,6 +1,6 @@
 #include "SMARTS25.H"
 
-#define N 20
+#define N 10
 #define M 200000
 
 /// MARK: macros
@@ -61,17 +61,10 @@ void main() {
 
   enum RUN { RR, EDF, RMS } run;
 
-  run = EDF;
+  run = RMS;
 
   switch (run) {
   case RR:
-    /// RR & Not EDF
-    /// N = 20
-    /// M = 200000
-
-    /// RR & EDF
-    /// N = 10
-    /// M = 10000
     SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd,
                              roundRobin);
     SMARTS.declareTask(a, 'A');
@@ -79,18 +72,16 @@ void main() {
     SMARTS.declareTask(c, 'C');
     break;
   case EDF:
-    /// N = 10
-    /// M = 10000
     SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, edf);
     SMARTS.declareTask(a, 'A', 10, 3);
     SMARTS.declareTask(b, 'B', 50, 2);
     SMARTS.declareTask(c, 'C', 30, 1);
     break;
   case RMS:
-    SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, rateMonotonicScheduling);
-		SMARTS.declareTask(a, 'a', 50, 1, 1);
-		SMARTS.declareTask(b, 'b', 51, 1, 2);
-		SMARTS.declareTask(c, 'c', 52, 1, 3);
+    SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, rms);
+    SMARTS.declareTask(a, 'A', 10, 1);
+    SMARTS.declareTask(b, 'B', 50, 1);
+    SMARTS.declareTask(c, 'C', 30, 1);
     break;
   default:
     break;

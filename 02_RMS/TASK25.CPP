@@ -48,18 +48,20 @@ void Task::redeclare() {
   deadline = originalDeadline;
   cycles--;
 
-// if the task did not finished its execution passed the deadline
-// we set the system error
-  if(status == READY) {
-    SMARTS.setError();
-    status = UNDEFINED;
-  }
-
   if (status == NOT_ACTIVE) {
     if (cycles > 0) {
         is_restore = true;
         status = READY;
     }
+    else {
+      status = NOT_ACTIVE;
+    }
+  }
+  else {
+    SMARTS.contextSwitchOff();
+    cprintf("Time error %c \n", name);
+    SMARTS.setError();
+    SMARTS.contextSwitchOn();
   }
 }
 

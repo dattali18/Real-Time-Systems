@@ -85,6 +85,11 @@ public:
 
   void updateDeadlines();
 
+  int getOriginalDeadline(int taskNum) {
+    // return context[taskNum].getOriginalDeadline();
+    return context[taskNum].originalDeadline;
+  } // get the original deadline of the task
+
   int getCycles(int i) {
     return context[i].getCycles();
   } // get the execution time of the task

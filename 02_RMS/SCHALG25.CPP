@@ -34,14 +34,14 @@ int edf() {
 
 int rms() {
   int nextTask = -1;
-	int min = 0xFFFF;
+	int min = -999;
 
 	for (int i = 0; i < SMARTS.getTotalTasks() - 1; i++) {
 		if (SMARTS.getStatus(i) == READY && SMARTS.getCycles(i) > 0) {
-			int taskPeriod = SMARTS.getOriginalDeadline(i);
+			int temp = SMARTS.getOriginalDeadline(i);
 
-			if (taskPeriod < min) {
-				min = taskPeriod;
+			if (temp < min) {
+				min = temp;
 				nextTask = i;
 			}
 		}
