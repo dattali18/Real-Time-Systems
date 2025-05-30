@@ -59,7 +59,7 @@ void c() {
 void main() {
   clrscr();
 
-  enum RUN { RR, EDF } run;
+  enum RUN { RR, EDF, RMS } run;
 
   run = EDF;
 
@@ -85,6 +85,12 @@ void main() {
     SMARTS.declareTask(a, 'A', 10, 3);
     SMARTS.declareTask(b, 'B', 50, 2);
     SMARTS.declareTask(c, 'C', 30, 1);
+    break;
+  case RMS:
+    SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, rateMonotonicScheduling);
+		SMARTS.declareTask(a, 'a', 50, 1, 1);
+		SMARTS.declareTask(b, 'b', 51, 1, 2);
+		SMARTS.declareTask(c, 'c', 52, 1, 3);
     break;
   default:
     break;

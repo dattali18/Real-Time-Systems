@@ -32,6 +32,8 @@ public:
   int getDeadline() { return deadline; }
   void updateDeadline() { deadline--; }
 
+  int getOriginalDeadline() { return originalDeadline; }
+
   int getCycles() { return cycles; }    // get the execution time
   void setCycles(int c) { cycles = c; } // set the execution time
 

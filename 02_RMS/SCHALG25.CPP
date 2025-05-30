@@ -31,3 +31,24 @@ int edf() {
 
   return (nextTask >= 0) ? nextTask : SMARTS.getTotalTasks();
 }
+
+int rms() {
+  int nextTask = -1;
+	int min = 0xFFFF;
+
+	for (int i = 0; i < SMARTS.getTotalTasks() - 1; i++) {
+		if (SMARTS.getStatus(i) == READY && SMARTS.getCycles(i) > 0) {
+			int taskPeriod = SMARTS.getOriginalDeadline(i);
+
+			if (taskPeriod < min) {
+				min = taskPeriod;
+				nextTask = i;
+			}
+		}
+	}
+
+	if (nextTask < 0)	// no found READY task to run
+		nextTask = SMARTS.getTotalTasks();	// call main next time.
+
+	return nextTask;
+}
