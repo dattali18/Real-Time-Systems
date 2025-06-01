@@ -58,10 +58,8 @@ void Task::redeclare() {
     }
   }
   else {
-    SMARTS.contextSwitchOff();
-    cprintf("Time error %c \n", name);
+    cprintf("Time error task: %c \n", name);
     SMARTS.setError();
-    SMARTS.contextSwitchOn();
   }
 }
 

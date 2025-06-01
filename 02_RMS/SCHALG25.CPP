@@ -34,7 +34,7 @@ int edf() {
 
 int rms() {
   int nextTask = -1;
-	int min = -999;
+	int min = MAXINT;
 
 	for (int i = 0; i < SMARTS.getTotalTasks() - 1; i++) {
 		if (SMARTS.getStatus(i) == READY && SMARTS.getCycles(i) > 0) {
@@ -47,8 +47,5 @@ int rms() {
 		}
 	}
 
-	if (nextTask < 0)	// no found READY task to run
-		nextTask = SMARTS.getTotalTasks();	// call main next time.
-
-	return nextTask;
+	return (nextTask >= 0) ? nextTask : SMARTS.getTotalTasks();
 }
