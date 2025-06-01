@@ -1,5 +1,7 @@
-#include "SMARTS25.H"
 #include "TASK25.H"
+
+#include "SMARTS25.H"
+
 
 Task::Task() {
   stack[MaxStack - 14] = _BP;

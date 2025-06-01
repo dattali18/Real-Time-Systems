@@ -1,5 +1,6 @@
 #include "MUTEX25.H"
-#include "SMARTS25.H"
+
+#include "EXTERN25.H"
 
 void PriorityQueue::enqueue(int value, int priority) {
 	queue[size].value = value;
@@ -34,9 +35,8 @@ Mutex::Mutex() {
     s = 1; // Semaphore value
     numberSuspended = 0;
     level = 0;
+	waitingList = new PriorityQueue();
 }
-
-
 
 void Mutex::acquire()
 {

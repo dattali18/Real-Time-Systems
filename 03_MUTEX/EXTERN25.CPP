@@ -1,9 +1,23 @@
-#include "PARAL25.H"
-#include "TASK25.H"
-#include "SMARTS25.H"
+#include "EXTERN25.H"
 
 Parallelism SMARTS;
+
+Mutex MUTEX;
+
 static unsigned StackSegAct, StackPtrAct;
+
+unsigned getTimerClocks() {
+  // Gets the remaining clocks of the timer register
+
+  unsigned clocks;
+  /* latch counter #0 */
+  outportb(0x43, 0x00);
+  /* read counter #0 low byte */
+  clocks = inportb(0x40);
+  /* read counter #0 high byte */
+  clocks += inportb(0x40) << 8;
+  return clocks;
+}
 
 void far interrupt timerInterruptHandler(...) {
   // This function is called 18.2 times per second ( every ~~ 55 millisec).
@@ -35,12 +49,6 @@ void far interrupt timerInterruptHandler(...) {
     asm mov ss, ax;
     asm mov sp, StackPtrAct;
   }
-  // else if 'context switch' flag=false set 'end of time slice' flag
-  //	else
-  //	{
-  //		SMARTS.setEndOfTimeSlice();
-  //		++SMARTS.TScount;	// increment Time Share count
-  //	}
 }
 
 void scheduler() {

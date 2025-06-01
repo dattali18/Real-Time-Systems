@@ -1,5 +1,5 @@
-#define MUTEX25_H
 #ifndef MUTEX25_H
+#define MUTEX25_H
 
 #include "CONST25.H"
 
@@ -9,11 +9,11 @@ struct QueueItem {
 };
 
 class PriorityQueue {
-    struct QueueItem queue[MaxTask];
+    QueueItem queue[MaxTask];
     int size;
 
 public:
-    PriorityQueue() { size = 0;}
+    PriorityQueue() { size = 0; }
 
     void enqueue(int value, int priority);
     
@@ -25,7 +25,7 @@ class Mutex {
     int s;
     int numberSuspended;
     int level;
-    PriorityQueue waitingList;
+    PriorityQueue* waitingList;
 
 public:
     Mutex();
