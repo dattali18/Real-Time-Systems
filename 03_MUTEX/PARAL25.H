@@ -40,7 +40,7 @@ public:
                          int far (*algorithm)());
   // int declareTask(void far *code, char name); // inserts a new task entry
   int declareTask(void far *code, char name, int deadline = 0,
-                  int cycles = 0);  // inserts a new task entry with its
+                  int cycles = 0, int priority = 0);  // inserts a new task entry with its
                                     // execution time and deadline time
   void runTheTasks();               // start running the tasks
   void callScheduler();             // return to the control to the scheduler
@@ -103,6 +103,14 @@ public:
 
   void setError() { this->error = true; } // set the error flag
   int getError() { return error; }        // get the error flag
+
+  int getCurrentPriority() {
+    return context[currentTask].currentPriority;
+  } // get the current priority of the current task
+
+  void setCurrentPriority(int priority) {
+    context[currentTask].currentPriority = priority;
+  } // set the current priority of the current task
 };
 
 #endif // PARAL25_H

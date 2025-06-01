@@ -6,6 +6,7 @@
 #include "TASK25.H"
 #include "EVENT25.H"
 #include "SCHALG25.H"
+#include "MUTEX25.H"
 
 // reads the number of the remaining clocks from the timer register
 extern unsigned getTimerClocks();
@@ -17,5 +18,6 @@ void myTaskEnd();
 
 // main scheduler object
 extern Parallelism SMARTS;
+// extern Mutex MUTEX;
 
 #endif // SMARTS25_H

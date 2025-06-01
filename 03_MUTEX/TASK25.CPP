@@ -18,7 +18,7 @@ Task::Task() {
   currentPriority = priority = 0;
 }
 
-void Task::declare(void far *code, void far *taskEnd, char name, int deadline, int cycles) {
+void Task::declare(void far *code, void far *taskEnd, char name, int deadline, int cycles, int priority) {
   // Declare a task with its execution time and deadline time
 
   stack[MaxStack - 5] = FP_OFF(code);
@@ -40,6 +40,8 @@ void Task::declare(void far *code, void far *taskEnd, char name, int deadline, i
   this->cycles = cycles; // set the execution time
   this->deadline = deadline;
   this->originalDeadline = deadline;
+  this->priority = priority;
+  this->currentPriority = priority;
 
   status = READY;
 }

@@ -38,7 +38,7 @@ public:
   void setCycles(int c) { cycles = c; } // set the execution time
 
   void declare(void far *code, void far *taskEnd, char name, int deadline = 0,
-               int cycles = 0);
+               int cycles = 0, int priority = 0);
 
   void redeclare();
 };

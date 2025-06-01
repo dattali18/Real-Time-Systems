@@ -1,6 +1,6 @@
 #include "PARAL25.H"
 #include "TASK25.H"
-
+#include "SMARTS25.H"
 
 Parallelism::Parallelism() {
     currentTask = 0;
@@ -30,12 +30,13 @@ Parallelism::Parallelism() {
   }
   
   int Parallelism::declareTask(void far *code, char name, int deadline,
-                               int cycles) {
+                               int cycles, int priority) {
     // Insert a new task entry in SMARTS context array [ ] with its execution time
     // and deadline time
   
     if (totalTasks < MaxTask - 1) {
-      context[totalTasks++].declare(code, userTaskEnd, name, deadline, cycles);
+      context[totalTasks++].declare(code, userTaskEnd, name, deadline, cycles, 
+                                    priority);
       ++activeTasks;
       return true;
     } else

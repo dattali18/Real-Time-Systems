@@ -79,8 +79,8 @@ void main() {
     break;
   case RMS:
     SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, rms);
-    SMARTS.declareTask(a, 'A', 10, 1);
-    SMARTS.declareTask(b, 'B', 60, 1);
+    SMARTS.declareTask(a, 'A', 10, 3);
+    SMARTS.declareTask(b, 'B', 60, 2);
     SMARTS.declareTask(c, 'C', 30, 1);
     break;
   default:
