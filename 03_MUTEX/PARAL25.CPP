@@ -22,21 +22,20 @@ Parallelism::Parallelism() {
     this->userTaskEnd = userTaskEnd;
     this->algorithm = algorithm;
   
-    contextSched.declare(scheduler, userTaskEnd,
-                         'S'); // prepare the stack of the scheduler task
+    contextSched.declare(scheduler, userTaskEnd, 'S');
+    // prepare the stack of the scheduler task
   
     for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
       schedCopy[i] = contextSched.stack[i];
   }
   
   int Parallelism::declareTask(void far *code, char name, int deadline,
-                               int cycles, int priority) {
+			       int cycles, int priority) {
     // Insert a new task entry in SMARTS context array [ ] with its execution time
     // and deadline time
-  
+
     if (totalTasks < MaxTask - 1) {
-      context[totalTasks++].declare(code, userTaskEnd, name, deadline, cycles, 
-                                    priority);
+      context[totalTasks++].declare(code, userTaskEnd, name, deadline, cycles, priority);
       ++activeTasks;
       return true;
     } else
@@ -44,9 +43,12 @@ Parallelism::Parallelism() {
   }
   
   void Parallelism::updateDeadlines() {
-    for (int i = 0; i < totalTasks - 1; ++i) {
+    int i;
+    for (i = 0; i < totalTasks - 1; ++i) {
       context[i].updateDeadline();
-  
+    }
+
+    for (i = 0; i < totalTasks - 1; --i) {
       if (context[i].deadline == 0 && context[i].cycles > 0) {
         context[i].redeclare();
       }
@@ -63,8 +65,8 @@ Parallelism::Parallelism() {
     currentTask = totalTasks;
   
     asm cli; // forbids interrupts (clear interrupts) while changing the interrupt
-             // vect saves the original BIOS userInt in our variable
-             // 'userIntAddress' to be restored at the end
+    // vect saves the original BIOS userInt in our variable
+    // 'userIntAddress' to be restored at the end
     userIntAddress = getvect(
         userInt); // BIOS userInt 0x60  (unused by PC)
                   // puts the normal BIOS timerInt into the unused userInt address
@@ -138,20 +140,23 @@ Parallelism::Parallelism() {
     if (endOfTimeSlice) // is current time slice finished ?
     {
       endOfTimeSlice = false;
-      contextSwitchFlag = true;
+      context[currentTask].contextSwitchOn();
+      // contextSwitchFlag = true;
       callScheduler(); // return control to the scheduler
       return 1;
     }
-    contextSwitchFlag = true;
+    // contextSwitchFlag = true;
+    context[currentTask].contextSwitchOn();
     return 0;
   }
   
   void Parallelism::contextSwitchOff() {
     // Disable context switch
-    contextSwitchFlag = false;
+    // contextSwitchFlag = false;
+    context[currentTask].contextSwitchOff();
   }
   
-  int Parallelism::getContextSwitch() { return contextSwitchFlag; }
+  int Parallelism::getContextSwitch() { return context[currentTask].contextSwitchFlag; }
   
   void Parallelism::setProgInt() {
     // flag indicates to the extern function 'timerInterruptHandler'
@@ -212,6 +217,7 @@ Parallelism::Parallelism() {
     if (taskNum < totalTasks)
       context[taskNum].incrPriority();
   }
+  
   void Parallelism::setOriginalPriority(int taskNum) {
     if (taskNum < totalTasks)
       context[taskNum].setOriginalPriority();
@@ -282,9 +288,6 @@ Parallelism::Parallelism() {
   }
   
   void Parallelism::handleTimers() {
-    // handling of the sleep status mode
-    /// MARK: update deadline
-  
     this->updateDeadlines(); // update the deadlines of all tasks
   
     for (int i = totalTasks - 1; i >= 0; --i) {

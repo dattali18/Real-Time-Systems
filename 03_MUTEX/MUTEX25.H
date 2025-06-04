@@ -3,32 +3,36 @@
 
 #include "CONST25.H"
 
-struct QueueItem {
-    int value;
-    int priority;
-};
 
 class PriorityQueue {
-    QueueItem queue[MaxTask];
+    int queue[MaxTask];
     int size;
+
+    void sort();
 
 public:
     PriorityQueue() { size = 0; }
 
-    void enqueue(int value, int priority);
+    void push(int taskNum);
     
-    int peek();
+    int pop();
+
+    int is_empty() { return size == 0; }
+
+    int search(int taskNum);
 };
 
 class Mutex {
     int owner;
     int s;
-    int numberSuspended;
     int level;
-    PriorityQueue* waitingList;
+    PriorityQueue waitingList;
+    int inheritanceFlag;
 
 public:
     Mutex();
+
+    Mutex(int inheritance);
 
     void acquire();
 

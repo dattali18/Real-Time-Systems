@@ -1,5 +1,3 @@
-#include "PARAL25.H"
-#include "TASK25.H"
 #include "SMARTS25.H"
 
 Parallelism SMARTS = Parallelism();

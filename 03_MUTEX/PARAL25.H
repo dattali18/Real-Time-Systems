@@ -105,12 +105,20 @@ public:
   int getError() { return error; }        // get the error flag
 
   int getCurrentPriority() {
-    return context[currentTask].currentPriority;
-  } // get the current priority of the current task
+    return context[currentTask].getCurrentPriority();
+  } // get the current task priority
 
-  void setCurrentPriority(int priority) {
-    context[currentTask].currentPriority = priority;
-  } // set the current priority of the current task
+  int getCurrentPriority(int i) {
+    return context[i].getCurrentPriority();
+  }
+
+  void setPriority(int taskNum, int priority) {
+    context[taskNum].setPriority(priority);
+  } // set the task priority
+
+  void resetPriority(int taskNum) {
+    context[taskNum].resetPriority();
+  } // reset the task priority to the original
 };
 
 #endif // PARAL25_H

@@ -20,7 +20,6 @@ public:
   void incrPriority();
   void setOriginalPriority();
 
-  /// MARK: addition for the class assignment
   int deadline;         // the deadline
   int originalDeadline; // the original deadline time
   int cycles;           // the execution time
@@ -38,9 +37,33 @@ public:
   void setCycles(int c) { cycles = c; } // set the execution time
 
   void declare(void far *code, void far *taskEnd, char name, int deadline = 0,
-               int cycles = 0, int priority = 0);
+    int cycles = 0, int priority = 0);
 
   void redeclare();
+
+  int getCurrentPriority() { return priority; }
+  void setCurrentPriority(int p) {
+    priority = p;
+    currentPriority = p;
+  } // set the priority of the task
+
+  int contextSwitchFlag;
+
+  void contextSwitchOff() {
+    contextSwitchFlag = false; // disable context switch
+  }
+
+  void contextSwitchOn() {
+    contextSwitchFlag = true; // enable context switch
+  }
+
+  void setPriority(int p) {
+    currentPriority = p;
+  }
+
+  void resetPriority() {
+    currentPriority = priority; // reset the priority to the original
+  }
 };
 
 

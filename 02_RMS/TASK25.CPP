@@ -58,8 +58,8 @@ void Task::redeclare() {
     }
   }
   else {
-    cprintf("Time error task: %c \n", name);
     SMARTS.setError();
+    SMARTS.callScheduler();
   }
 }
 

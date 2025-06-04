@@ -1,7 +1,5 @@
-#include "TASK25.H"
-
 #include "SMARTS25.H"
-
+#include "TASK25.H"
 
 Task::Task() {
   stack[MaxStack - 14] = _BP;
@@ -43,7 +41,8 @@ void Task::declare(void far *code, void far *taskEnd, char name, int deadline, i
   this->deadline = deadline;
   this->originalDeadline = deadline;
   this->priority = priority;
-  this->currentPriority = priority;
+
+  // contextSwitchFlag = 1;
 
   status = READY;
 }
@@ -62,8 +61,8 @@ void Task::redeclare() {
     }
   }
   else {
-    cprintf("Time error task: %c \n", name);
     SMARTS.setError();
+    SMARTS.callScheduler();
   }
 }
 

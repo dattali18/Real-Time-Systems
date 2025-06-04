@@ -1,6 +1,6 @@
-#include "PARAL25.H"
-#include "TASK25.H"
 #include "SMARTS25.H"
+
+/// MARK: timer
 
 unsigned getTimerClocks() {
   // Gets the remaining clocks of the timer register
@@ -14,6 +14,8 @@ unsigned getTimerClocks() {
   clocks += inportb(0x40) << 8;
   return clocks;
 }
+
+/// MARK: Parallelism
 
 Parallelism::Parallelism() {
   currentTask = 0;
@@ -35,19 +37,20 @@ void Parallelism::externalFunctions(
   this->userTaskEnd = userTaskEnd;
   this->algorithm = algorithm;
 
-  // prepare the stack of the scheduler task
   contextSched.declare(scheduler, userTaskEnd, 'S');
+  // prepare the stack of the scheduler task
 
   for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
     schedCopy[i] = contextSched.stack[i];
 }
 
-int Parallelism::declareTask(void far *code, char name, int deadline, int cycles) {
+int Parallelism::declareTask(void far *code, char name, int deadline,
+           int cycles, int priority) {
   // Insert a new task entry in SMARTS context array [ ] with its execution time
   // and deadline time
 
   if (totalTasks < MaxTask - 1) {
-    context[totalTasks++].declare(code, userTaskEnd, name, deadline, cycles);
+    context[totalTasks++].declare(code, userTaskEnd, name, deadline, cycles, priority);
     ++activeTasks;
     return true;
   } else
@@ -55,9 +58,12 @@ int Parallelism::declareTask(void far *code, char name, int deadline, int cycles
 }
 
 void Parallelism::updateDeadlines() {
-  for (int i = 0; i < totalTasks - 1; ++i) {
+  int i;
+  for (i = 0; i < totalTasks - 1; ++i) {
     context[i].updateDeadline();
+  }
 
+  for (i = 0; i < totalTasks - 1; --i) {
     if (context[i].deadline == 0 && context[i].cycles > 0) {
       context[i].redeclare();
     }
@@ -73,20 +79,18 @@ void Parallelism::runTheTasks() {
 
   currentTask = totalTasks;
 
-  asm cli; 
-  // forbids interrupts (clear interrupts) while changing the interrupt
+  asm cli; // forbids interrupts (clear interrupts) while changing the interrupt
   // vect saves the original BIOS userInt in our variable
   // 'userIntAddress' to be restored at the end
-  userIntAddress = getvect( userInt);
-  // BIOS userInt 0x60  (unused by PC)
-  // puts the normal BIOS timerInt into the unused userInt address
+  userIntAddress = getvect(
+      userInt); // BIOS userInt 0x60  (unused by PC)
+                // puts the normal BIOS timerInt into the unused userInt address
   setvect(userInt, getvect(timerInt)); // timerInt 0x08
 
   // sets our SMARTS external function 'timerInterruptHandler' as the new PC
   // hard interrupt time handler
   setvect(timerInt, timerInterruptHandler);
-  asm sti; 
-  // allows back interrupts (set interrupts)
+  asm sti; // allows back interrupts (set interrupts)
 
   // waits for end of runTheTasks (end of all the tasks)
   while (true) {
@@ -151,20 +155,23 @@ int Parallelism::contextSwitchOn() {
   if (endOfTimeSlice) // is current time slice finished ?
   {
     endOfTimeSlice = false;
-    contextSwitchFlag = true;
+    context[currentTask].contextSwitchOn();
+    // contextSwitchFlag = true;
     callScheduler(); // return control to the scheduler
     return 1;
   }
-  contextSwitchFlag = true;
+  // contextSwitchFlag = true;
+  context[currentTask].contextSwitchOn();
   return 0;
 }
 
 void Parallelism::contextSwitchOff() {
   // Disable context switch
-  contextSwitchFlag = false;
+  // contextSwitchFlag = false;
+  context[currentTask].contextSwitchOff();
 }
 
-int Parallelism::getContextSwitch() { return contextSwitchFlag; }
+int Parallelism::getContextSwitch() { return context[currentTask].contextSwitchFlag; }
 
 void Parallelism::setProgInt() {
   // flag indicates to the extern function 'timerInterruptHandler'
@@ -225,6 +232,7 @@ void Parallelism::incrPriority(int taskNum) {
   if (taskNum < totalTasks)
     context[taskNum].incrPriority();
 }
+
 void Parallelism::setOriginalPriority(int taskNum) {
   if (taskNum < totalTasks)
     context[taskNum].setOriginalPriority();
@@ -295,9 +303,6 @@ void Parallelism::getSchedStack(unsigned &StackSeg, unsigned &StackPtr) {
 }
 
 void Parallelism::handleTimers() {
-  // handling of the sleep status mode
-  /// MARK: update deadline
-
   this->updateDeadlines(); // update the deadlines of all tasks
 
   for (int i = totalTasks - 1; i >= 0; --i) {
@@ -314,4 +319,200 @@ void Parallelism::taskEnd() {
   // function return
   SMARTS.setCurrentNotActive();
   SMARTS.callScheduler();
+}
+
+/// MARK: Task
+
+Task::Task() {
+  stack[MaxStack - 14] = _BP;
+  stack[MaxStack - 13] = _DI;
+  stack[MaxStack - 12] = _SI;
+  stack[MaxStack - 11] = _DS;
+  stack[MaxStack - 10] = _ES;
+  stack[MaxStack - 9] = _DX;
+  stack[MaxStack - 8] = _CX;
+  stack[MaxStack - 7] = _BX;
+  stack[MaxStack - 6] = _AX;
+  stackSeg = FP_SEG(&stack[MaxStack - 14]);
+  stackPtr = FP_OFF(&stack[MaxStack - 14]);
+  status = NOT_ACTIVE;
+  sleepCount = 0;
+  currentPriority = priority = 0;
+}
+
+void Task::declare(void far *code, void far *taskEnd, char name, int deadline, int cycles, int priority) {
+  // Declare a task with its execution time and deadline time
+
+  stack[MaxStack - 5] = FP_OFF(code);
+  stack[MaxStack - 4] = FP_SEG(code);
+  stack[MaxStack - 3] = _FLAGS;
+  stack[MaxStack - 2] = FP_OFF(taskEnd);
+  stack[MaxStack - 1] = FP_SEG(taskEnd);
+
+  // copy the stack to the stackCopy array
+  for (int i = MaxStack - 1; i >= (MaxStack - 14); i--)
+    stackCopy[i] = stack[i];
+
+  stackSegCopy = stackSeg;
+  stackPtrCopy = stackPtr;
+
+  is_restore = false;
+
+  this->name = name;
+  this->cycles = cycles; // set the execution time
+  this->deadline = deadline;
+  this->originalDeadline = deadline;
+  this->priority = priority;
+
+  // contextSwitchFlag = 1;
+
+  status = READY;
+}
+
+void Task::redeclare() {
+  deadline = originalDeadline;
+  cycles--;
+
+  if (status == NOT_ACTIVE) {
+    if (cycles > 0) {
+        is_restore = true;
+        status = READY;
+    }
+    else {
+      status = NOT_ACTIVE;
+    }
+  }
+  else {
+    SMARTS.setError();
+    SMARTS.callScheduler();
+  }
+}
+
+void Task::incrPriority() { --currentPriority; }
+
+void Task::setOriginalPriority() { currentPriority = priority; }
+
+void Task::sleepDecr() {
+  // Decrements the sleep counter and update the task status accordingly
+
+  if (status == SLEEP) {
+    if (sleepCount > 0)
+      --sleepCount;
+    if (!sleepCount)
+      status = READY;
+  }
+}
+
+/// MARK: PriorityQueue
+
+#include "MUTEX25.H"
+
+#include "EXTERN25.H"
+
+void PriorityQueue::push(int taskNum) {
+	if(size < MaxTask) {
+		queue[size] = taskNum;
+		size++;
+		sort();
+		return;
+	}
+}
+
+int PriorityQueue::pop() {
+	return queue[--size];
+}
+
+void PriorityQueue::sort() {
+	// insertion sort
+	for (int i = 1; i < size; ++i) {
+		int key = queue[i];
+		int j = i - 1;
+
+		while (j >= 0 && SMARTS.getCurrentPriority(queue[j]) > SMARTS.getCurrentPriority(key)) {
+			queue[j + 1] = queue[j];
+			--j;
+		}
+
+		queue[j + 1] = key;
+	}
+}
+
+int PriorityQueue::search(int taskNum)
+{
+	for (int i = 0; i < size; i++)
+	{
+		if (queue[i] == taskNum)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/// MARK: Mutex
+
+Mutex::Mutex() {
+    owner = -1;
+    s = 1; // Semaphore value
+    level = 0;
+	waitingList = PriorityQueue();
+	inheritanceFlag = 0; // Default to no priority inheritance
+}
+
+Mutex::Mutex(int inheritance) {
+	owner = -1;
+	s = 1; // Semaphore value
+	level = 0;
+	waitingList = PriorityQueue();
+	inheritanceFlag = inheritance; // Set priority inheritance flag
+}
+
+void Mutex::acquire() {
+	SMARTS.contextSwitchOff();
+
+	int currentTask = SMARTS.getCurrentTask();
+	if (s == 1 || owner == currentTask) // prevent deadlock
+		s = 0;
+	else {
+		if (inheritanceFlag) {
+			if (SMARTS.getCurrentPriority(owner) > SMARTS.getCurrentPriority(currentTask)) {
+				SMARTS.setPriority(owner, SMARTS.getCurrentPriority(currentTask));
+				printf("\ncurrent task %d inherit to owner %d priority %d\n", currentTask, owner, SMARTS.getCurrentPriority(currentTask));
+				// fprintf(SMARTS.file, "currrent task %d inherite to owner %d priority %d \n", currentTask, owner, SMARTS.getCurrentPriority(currentTask));
+			}
+		}
+		waitingList.push(currentTask);
+		SMARTS.suspended();
+	}
+
+	owner = currentTask;
+	level++;
+
+	SMARTS.contextSwitchOn();
+}
+
+void Mutex::release() {
+		SMARTS.contextSwitchOff();
+		int currentTask = SMARTS.getCurrentTask();
+		if (owner == currentTask) {
+			if (--level)
+				return;
+	
+			else {
+				owner = -1;
+				if (!waitingList.is_empty()) {
+					int task = waitingList.pop();
+					SMARTS.resume(task);
+				}
+				else
+					s = 1;
+			}
+		}
+		if (inheritanceFlag == 1) {
+			SMARTS.resetPriority(currentTask);
+			printf("restore owner %d priority to original priority %d\n", currentTask, SMARTS.getCurrentPriority(currentTask));
+			// fprintf(SMARTS.file, "restore owner %d priority to original priority %d  \n", currentTask, SMARTS.getCurrentPriority(currentTask));
+		}
+	
+		SMARTS.contextSwitchOn();
 }

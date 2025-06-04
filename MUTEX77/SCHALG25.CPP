@@ -1,4 +1,3 @@
-#include "SCHALG25.H"
 #include "SMARTS25.H"
 
 int roundRobin() {
@@ -16,15 +15,15 @@ int roundRobin() {
 
 // EDF - Earliest Deadline First short-term algorithm
 int edf() {
-  int nextTask = -1; // no task to run
+  int nextTask = SMARTS.getCurrentTask();
   int min = MAXINT; // maximum deadline
 
   for (int i = 0; i < SMARTS.getTotalTasks(); i++) {
 		if (SMARTS.getStatus(i) != READY) 
       continue; // skip tasks that are not READY
 
-    if(SMARTS.getCycles(i) <= 0)
-      continue; // skip tasks with no cycles left
+    // if(SMARTS.getCycles(i) <= 0)
+    //   continue; // skip tasks with no cycles left
 
     int temp = SMARTS.getDeadline(i);
     if (temp < min) {
@@ -33,28 +32,26 @@ int edf() {
     }
   }
 
-  return (nextTask >= 0) ? nextTask : SMARTS.getTotalTasks();
+  return nextTask;
 }
 
 /// RMS: Rate Monotonic Scheduling short-term algorithm
 int rms() {
-  int nextTask = -1;
-	int min = MAXINT;
+  int nextTask = SMARTS.getCurrentTask();
+	int maxPriority = -999;
 
 	for (int i = 0; i < SMARTS.getTotalTasks(); i++) {
 		if (SMARTS.getStatus(i) != READY) 
       continue; // skip tasks that are not READY
 
-    if(SMARTS.getCycles(i) <= 0)
-      continue; // skip tasks with no cycles left
+    int temp = SMARTS.getCurrentPriority(i);
+    // getCurrentPriority() returns the period of the task
 
-    int temp = SMARTS.getOriginalDeadline(i);
-
-    if (temp < min) {
-      min = temp;
+    if (temp < maxPriority) {
+      maxPriority = temp;
       nextTask = i;
     }
 	}
 
-	return (nextTask >= 0) ? nextTask : SMARTS.getTotalTasks();
+	return nextTask;
 }

@@ -2,68 +2,108 @@
 
 #include "EXTERN25.H"
 
-void PriorityQueue::enqueue(int value, int priority) {
-	queue[size].value = value;
-	queue[size].priority = priority;
-
-	size++;
+void PriorityQueue::push(int taskNum) {
+	if(size < MaxTask) {
+		queue[size] = taskNum;
+		size++;
+		sort();
+		return;
+	}
 }
 
-int PriorityQueue::peek() {
-	int highestPriority = -999;
-	int ind = -1;
+int PriorityQueue::pop() {
+	return queue[--size];
+}
 
-	for (int i = 0; i < size; i++) {
-		if (highestPriority < queue[i].priority) {
-			highestPriority = queue[i].priority;
-			ind = i;
+void PriorityQueue::sort() {
+	// insertion sort
+	for (int i = 1; i < size; ++i) {
+		int key = queue[i];
+		int j = i - 1;
+
+		while (j >= 0 && SMARTS.getCurrentPriority(queue[j]) > SMARTS.getCurrentPriority(key)) {
+			queue[j + 1] = queue[j];
+			--j;
+		}
+
+		queue[j + 1] = key;
+	}
+}
+
+int PriorityQueue::search(int taskNum)
+{
+	for (int i = 0; i < size; i++)
+	{
+		if (queue[i] == taskNum)
+		{
+			return 1;
 		}
 	}
-
-	int ret = queue[ind].value;
-	
-	for (i = ind; i < size; i++) 
-        queue[i] = queue[i + 1];
-
-	size--;
-
-	return ret;
+	return 0;
 }
 
 Mutex::Mutex() {
     owner = -1;
     s = 1; // Semaphore value
-    numberSuspended = 0;
     level = 0;
-	waitingList = new PriorityQueue();
+	waitingList = PriorityQueue();
+	inheritanceFlag = 0; // Default to no priority inheritance
 }
 
-void Mutex::acquire()
-{
-	if (s == 1 || owner == SMARTS.getCurrentTask())
+Mutex::Mutex(int inheritance) {
+	owner = -1;
+	s = 1; // Semaphore value
+	level = 0;
+	waitingList = PriorityQueue();
+	inheritanceFlag = inheritance; // Set priority inheritance flag
+}
+
+void Mutex::acquire() {
+	SMARTS.contextSwitchOff();
+
+	int currentTask = SMARTS.getCurrentTask();
+	if (s == 1 || owner == currentTask) // prevent deadlock
 		s = 0;
 	else {
-		this->numberSuspended++;
-		waitingList.enqueue(SMARTS.getCurrentTask(), SMARTS.getCurrentPriority());
-		SMARTS.suspended();		// suspending the current task.
+		if (inheritanceFlag) {
+			if (SMARTS.getCurrentPriority(owner) > SMARTS.getCurrentPriority(currentTask)) {
+				SMARTS.setPriority(owner, SMARTS.getCurrentPriority(currentTask));
+				printf("\ncurrent task %d inherit to owner %d priority %d\n", currentTask, owner, SMARTS.getCurrentPriority(currentTask));
+				// fprintf(SMARTS.file, "currrent task %d inherite to owner %d priority %d \n", currentTask, owner, SMARTS.getCurrentPriority(currentTask));
+			}
+		}
+		waitingList.push(currentTask);
+		SMARTS.suspended();
 	}
-	owner = SMARTS.getCurrentTask();
+
+	owner = currentTask;
 	level++;
+
+	SMARTS.contextSwitchOn();
 }
 
-void Mutex::release()
-{
-	if (owner == SMARTS.getCurrentTask())
-		if (--level)
-			return;
-		else {
-			owner = -1;
-			if (this->numberSuspended > 0) {
-				this->numberSuspended--;
-				int task = waitingList.peek();
-				SMARTS.resume(task);
+void Mutex::release() {
+		SMARTS.contextSwitchOff();
+		int currentTask = SMARTS.getCurrentTask();
+		if (owner == currentTask) {
+			if (--level)
+				return;
+	
+			else {
+				owner = -1;
+				if (!waitingList.is_empty()) {
+					int task = waitingList.pop();
+					SMARTS.resume(task);
+				}
+				else
+					s = 1;
 			}
-			else
-				s = 1;
 		}
+		if (inheritanceFlag == 1) {
+			SMARTS.resetPriority(currentTask);
+			printf("restore owner %d priority to original priority %d\n", currentTask, SMARTS.getCurrentPriority(currentTask));
+			// fprintf(SMARTS.file, "restore owner %d priority to original priority %d  \n", currentTask, SMARTS.getCurrentPriority(currentTask));
+		}
+	
+		SMARTS.contextSwitchOn();
 }

@@ -3,8 +3,6 @@
 #define N 10
 #define M 200000
 
-/// MARK: macros
-
 void a() {
   SMARTS.contextSwitchOff();
   cout << "\n *************   A Start    *********************\n";
@@ -61,25 +59,30 @@ void main() {
 
   enum RUN { RR, EDF, RMS } run;
 
-  run = EDF;
+  run = RMS;
 
   switch (run) {
   case RR:
-    SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd,
-                             roundRobin);
-    SMARTS.declareTask(a, 'A');
-    SMARTS.declareTask(b, 'B');
-    SMARTS.declareTask(c, 'C');
+    cout << "Round Robin:\n";
+    cout << "*************************************************\n";
+    SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, roundRobin);
+    SMARTS.declareTask(a, 'A', 100, 2);
+    SMARTS.declareTask(b, 'B', 100, 1);
+    SMARTS.declareTask(c, 'C', 100, 1);
     break;
   case EDF:
+    cout << "EDF:\n";
+    cout << "*************************************************\n";
     SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, edf);
     SMARTS.declareTask(a, 'A', 10, 3);
     SMARTS.declareTask(b, 'B', 60, 2);
     SMARTS.declareTask(c, 'C', 30, 1);
     break;
   case RMS:
+    cout << "RMS:\n";
+    cout << "*************************************************\n";
     SMARTS.externalFunctions(timerInterruptHandler, scheduler, myTaskEnd, rms);
-    SMARTS.declareTask(a, 'A', 10, 1);
+    SMARTS.declareTask(a, 'A', 90, 1);
     SMARTS.declareTask(b, 'B', 60, 1);
     SMARTS.declareTask(c, 'C', 30, 1);
     break;

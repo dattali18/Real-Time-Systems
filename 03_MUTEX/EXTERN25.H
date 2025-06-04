@@ -16,6 +16,4 @@ void myTaskEnd();
 
 extern Parallelism SMARTS;
 
-extern Mutex MUTEX;
-
 #endif // EXTERN25_H
